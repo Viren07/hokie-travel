@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hokie Travel — Clickable Prototype</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Hokie Travel">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="apple-touch-icon.png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#000; --surface:#151515; --surface2:#222; --line:#2e2e2e;
+    --card:#c8cfd9; --card-ink:#111; --nav:#66696c; --nav-active:#c8cfd9;
+    --maroon:#7b1c1c; --orange:#ff8a4c; --red:#ff3b30;
+    --ink:#f4f4f4; --muted:#9a9a9a;
+    --good:#34c759; --warn:#ffb020; --bad:#ff453a; --blue:#4c8dff;
+    /* tinted surfaces (alerts, highlighted cards) */
+    --warm-bg:#2a1a0e; --warm-card:#1c1410; --warm-line:#5b3413; --warm-ink:#ffcf9e; --warm-ink2:#ffd7c2;
+    --cool-bg:#0f1a2e; --cool-card:#101418; --cool-line:#23406e; --cool-line2:#243040; --cool-ink:#b9d2ff; --cool-chip:#1d2a3a;
+    /* tracks, dashes, disabled bits */
+    --track:#333; --track2:#444; --dash:#555; --dim:#888; --dim-ic:#333; --walk-ic:#bbb;
+    --seg-on:#3a3a3a; --seg-on-ink:#fff; --seg-shadow:none;
+    --toast-bg:#fff; --toast-ink:#000; --scrim:rgba(0,0,0,.8);
+    /* desktop page around the phone */
+    --page:#1b1b1f; --notes-ink:#cfcfd4; --notes-h:#888; --notes-q:#232327; --notes-link:var(--orange);
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#f2f3f5; --surface:#fff; --surface2:#e9ebee; --line:#d9dce1;
+    --card:#dfe3e9; --ink:#15171a; --muted:#5f6368;
+    --good:#1e8e3e; --warn:#b06000; --bad:#d93025; --blue:#1a5fd6;
+    --warm-bg:#fff3e6; --warm-card:#fff6ec; --warm-line:#f0c69c; --warm-ink:#8a4200; --warm-ink2:#7a3a12;
+    --cool-bg:#eaf1ff; --cool-card:#f3f7ff; --cool-line:#c3d5f5; --cool-line2:#cfdcf2; --cool-ink:#1d4ea8; --cool-chip:#3b5b8a;
+    --track:#e0e3e8; --track2:#c3c8cf; --dash:#b8bcc2; --dim:#9aa0a6; --dim-ic:#b9bec5; --walk-ic:#5f6368;
+    --seg-on:#fff; --seg-on-ink:#15171a; --seg-shadow:0 1px 3px rgba(0,0,0,.15);
+    --toast-bg:#15171a; --toast-ink:#fff; --scrim:rgba(0,0,0,.45);
+    --page:#e6e8ec; --notes-ink:#33363b; --notes-h:#6b7078; --notes-q:#fff; --notes-link:#b3400a;
+    color-scheme:light;
+  }
+  /* splash + loading are built on the team's black-background artwork: always dark */
+  #s-splash,#s-loading{--bg:#000;--ink:#f4f4f4;--muted:#9a9a9a;color-scheme:dark}
+  /* main tabs have no wordmark header: just a top gap */
+  .screen.tabscreen{padding-top:20px}
+  .homebar{display:flex;gap:10px;align-items:center;margin:0 16px;flex-shrink:0}
+  .homebar .search{margin:0;flex:1;width:auto}
+  .themebtn{width:50px;height:50px;border-radius:50%;background:var(--card);color:var(--card-ink);display:grid;place-items:center;font-size:20px;line-height:1;flex-shrink:0}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--page);transition:background .2s;font-family:Inter,system-ui,-apple-system,sans-serif;color:var(--ink);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;gap:40px;padding:24px 16px}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+  /* side notes */
+  .notes{width:300px;font-size:13px;line-height:1.5;color:var(--notes-ink);max-height:760px;overflow-y:auto;scrollbar-width:thin}
+  .notes img{width:200px;display:block;margin-bottom:6px}
+  .notes h2{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--notes-h);margin:16px 0 6px}
+  .notes ol,.notes ul{padding-left:26px}
+  .notes li{margin:2px 0}
+  .notes a{color:var(--notes-link);cursor:pointer;text-decoration:none}
+  .notes a:hover{text-decoration:underline}
+  .notes .q{border-left:3px solid var(--maroon);padding:6px 10px;background:var(--notes-q);border-radius:4px;font-weight:500}
+  @media(max-width:780px){.notes{display:none}}
+
+  /* phone */
+  .phone{width:375px;height:780px;background:var(--bg);border-radius:44px;border:10px solid #0c0c0c;
+    box-shadow:0 0 0 2px #333,0 30px 60px rgba(0,0,0,.6);position:relative;overflow:hidden;flex-shrink:0}
+  /* on a real phone: drop the fake phone frame and fill the screen like an app */
+  @media(max-width:500px){
+    body{padding:0;display:block;min-height:0}
+    .phone{width:100vw;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
+    .nav{bottom:calc(10px + env(safe-area-inset-bottom))}
+    input,select{font-size:16px!important} /* stops iOS zooming in when a field is tapped */
+  }
+  .screen{position:absolute;inset:0;background:var(--bg);color:var(--ink);display:none;flex-direction:column;overflow:hidden}
+  .screen.on{display:flex;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0}to{opacity:1}}
+  .scroll{flex:1;overflow-y:auto;padding:0 16px 110px;scrollbar-width:none}
+  .scroll::-webkit-scrollbar{display:none}
+
+  .wordmark{display:block;height:34px;width:auto;margin:22px 16px 12px}
+  .wordmark.sm{height:26px;margin:20px 16px 10px}
+  .topbar{display:flex;align-items:center;gap:10px;padding:20px 16px 10px}
+  .topbar h2{font-size:18px;font-weight:600}
+  .back{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;flex-shrink:0;font-size:20px}
+
+  /* nav — the team's own icons */
+  .nav{position:absolute;left:10px;right:10px;bottom:14px;height:64px;background:var(--nav);border-radius:32px;
+    display:flex;align-items:center;justify-content:space-between;padding:0 6px;z-index:20}
+  .nav.hide{display:none}
+  .nav button{height:54px;border-radius:14px;display:grid;place-items:center;padding:0 4px;transition:background .15s}
+  .nav button.on{background:var(--nav-active)}
+  .nav img{height:40px;width:auto;display:block}
+  .nav img.wide{height:auto;width:76px}
+  .nav .pk{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .nav .pk svg{width:28px;height:28px}
+  .nav .pk span{font:800 7.5px/1 Inter;letter-spacing:.05em;color:#000}
+
+  /* splash / loading */
+  #s-splash{justify-content:center;align-items:center;cursor:pointer}
+  #s-splash .logo{width:280px;height:280px}
+  #s-splash .wm{width:300px;margin-top:22px}
+  #s-splash .tap{position:absolute;bottom:40px;color:var(--muted);font-size:13px;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  #s-loading{align-items:center}
+  #s-loading .route{width:100%;margin-top:120px}
+  .spinner{color:var(--ink);width:44px;height:44px;margin-top:40px;animation:spin 1s steps(12) infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  #loadMsg{margin-top:14px;font-size:13px;color:var(--muted)}
+
+  /* home */
+  .search{margin:0 16px;background:var(--card);color:var(--card-ink);border-radius:26px;height:50px;display:flex;align-items:center;gap:12px;padding:0 18px;font-size:17px;width:calc(100% - 32px);text-align:left;flex-shrink:0}
+  .map{position:relative;flex:1;margin-top:10px;overflow:hidden;background:#eef1ee}
+  .map>img{width:100%;height:100%;object-fit:cover;display:block}
+  .mk{position:absolute;width:26px;height:26px;border-radius:50%;border:2px solid #fff;display:grid;place-items:center;font:700 8px Inter;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+  .mk.bus1{background:var(--maroon);animation:m1 9s linear infinite}
+  .mk.bus2{background:var(--orange);animation:m2 11s linear infinite}
+  @keyframes m1{0%{left:12%;top:62%}50%{left:38%;top:53%}100%{left:12%;top:62%}}
+  @keyframes m2{0%{left:52%;top:18%}50%{left:47%;top:52%}100%{left:52%;top:18%}}
+  .me{position:absolute;left:32%;top:40%;width:16px;height:16px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 10px rgba(26,115,232,.18)}
+  .livebtn{position:absolute;right:12px;top:10px;background:#000;color:#fff;border-radius:16px;padding:7px 12px;font-size:12px;font-weight:600}
+  .greet{position:absolute;left:0;right:0;bottom:92px;background:var(--card);color:var(--card-ink);border-radius:26px 26px 0 0;padding:14px 16px 16px}
+  .greet .top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .greet small{font-size:14px}
+  .greet .hi{display:block;font-size:26px;font-weight:500;margin-top:2px}
+  .greet .next{margin-top:10px;background:#fff;border-radius:14px;padding:9px 12px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;color:#111}
+  .qr{background:#000;color:#fff;border-radius:22px;padding:10px 14px;display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 16px 0;scrollbar-width:none;flex-shrink:0}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{white-space:nowrap;background:var(--surface2);border:1px solid var(--line);border-radius:18px;padding:7px 12px;font-size:12.5px}
+  .chip.on{background:var(--maroon);border-color:var(--maroon);color:#fff}
+  .alert{margin:10px 16px 0;background:var(--warm-bg);border:1px solid var(--warm-line);color:var(--warm-ink);border-radius:12px;padding:9px 12px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start;text-align:left;flex-shrink:0}
+  .alert.inline{margin:12px 0 0}
+  .alert.blue{background:var(--cool-bg);border-color:var(--cool-line);color:var(--cool-ink)}
+
+  /* cards */
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;margin-top:12px;display:block;width:100%;text-align:left}
+  .card.tap:active{transform:scale(.99)}
+  .row{display:flex;align-items:center;gap:12px}
+  .row.sb{justify-content:space-between}
+  .ic{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:var(--maroon);color:#fff;font-weight:700;font-size:12px}
+  .ic svg{width:24px;height:24px}
+  .t1{font-weight:600;font-size:15px}
+  .t2{font-size:12.5px;color:var(--muted);margin-top:2px}
+  .big{font-size:20px;font-weight:700}
+  .pill{font-size:11px;font-weight:600;border-radius:10px;padding:3px 8px;display:inline-block;white-space:nowrap}
+  .p-good{background:rgba(52,199,89,.15);color:var(--good)}
+  .p-warn{background:rgba(255,176,32,.15);color:var(--warn)}
+  .p-bad{background:rgba(255,69,58,.15);color:var(--bad)}
+  .p-blue{background:rgba(76,141,255,.15);color:var(--blue)}
+  .p-best{background:linear-gradient(90deg,var(--red),var(--orange));color:#000}
+  .meter{height:6px;background:var(--track);border-radius:4px;overflow:hidden;margin-top:6px}
+  .meter i{display:block;height:100%;border-radius:4px}
+  .facts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+  .fact{background:var(--surface2);border-radius:10px;padding:8px}
+  .fact b{display:block;font-size:14px}
+  .fact span{font-size:10.5px;color:var(--muted)}
+  .sec{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:20px 0 2px}
+  .btn{display:block;width:100%;text-align:center;border-radius:14px;padding:13px;font-weight:600;margin-top:12px}
+  .btn.pri{background:linear-gradient(90deg,var(--red),var(--orange));color:#000}
+  .btn.sec2{background:var(--surface2);border:1px solid var(--line)}
+  .btn.small{padding:8px 12px;font-size:13px;width:auto;display:inline-block;margin-top:0}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .rep{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 6px;font-size:12px;text-align:center}
+  .rep svg{width:20px;height:20px;display:block;margin:0 auto 4px}
+  .seg{display:flex;background:var(--surface2);border-radius:12px;padding:3px;margin-top:10px}
+  .seg button{flex:1;padding:8px 4px;border-radius:9px;font-size:12.5px;font-weight:500;color:var(--muted)}
+  .seg button.on{background:var(--seg-on);color:var(--seg-on-ink);box-shadow:var(--seg-shadow)}
+
+  /* forms */
+  .field{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 14px;margin-top:8px;display:flex;align-items:center;gap:10px}
+  .field label{font-size:11px;color:var(--muted);display:block}
+  .field input,.field select{background:none;border:0;color:var(--ink);font:500 15px Inter,system-ui;width:100%;outline:none}
+  .field select option{background:var(--surface2)}
+  .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .sugg{display:flex;align-items:center;gap:12px;padding:12px 2px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+  .setrow:last-child{border-bottom:0}
+  .setrow .t1{font-size:14px;font-weight:500}
+  .toggle{width:44px;height:26px;border-radius:13px;background:var(--track2);position:relative;flex-shrink:0;transition:.2s}
+  .toggle::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s}
+  .toggle.on{background:var(--good)}
+  .toggle.on::after{left:21px}
+
+  /* timeline */
+  .tl{margin-top:14px;border-left:2px dashed var(--dash);margin-left:10px;padding-left:18px}
+  .tl div{position:relative;padding-bottom:16px;font-size:13.5px}
+  .tl div::before{content:"";position:absolute;left:-25px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--orange)}
+  .tl small{display:block;color:var(--muted);font-size:12px}
+
+  /* calendar / day plan */
+  .cal-logo{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;font-weight:800;font-size:13px;color:#fff}
+  .event{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--orange);border-radius:14px;padding:12px 14px;margin-top:10px}
+  .event .src{font-size:10.5px;font-weight:700;letter-spacing:.04em;border-radius:6px;padding:2px 6px}
+  .leg{margin:0 0 0 18px;border-left:2px dashed var(--track2);padding:10px 0 10px 16px;position:relative}
+  .leg .box{background:var(--cool-card);border:1px solid var(--cool-line2);border-radius:12px;padding:10px 12px;width:100%;text-align:left;display:block}
+  .leg .box .row{gap:10px}
+  .leg .mi{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:var(--cool-chip);flex-shrink:0}
+  .leg .mi svg{width:18px;height:18px}
+  .replan{background:linear-gradient(90deg,rgba(255,59,48,.14),rgba(255,138,76,.14));border:1px solid var(--warm-line);border-radius:14px;padding:12px;margin-top:12px;display:none}
+  .replan.on{display:block;animation:fade .4s}
+
+  .toast{position:absolute;left:20px;right:20px;bottom:96px;background:var(--toast-bg);color:var(--toast-ink);border-radius:14px;padding:12px 14px;font-size:13.5px;font-weight:500;z-index:60;transform:translateY(20px);opacity:0;transition:.25s;pointer-events:none}
+  .toast.on{transform:none;opacity:1}
+  .modal{position:absolute;inset:0;background:var(--scrim);z-index:40;display:none;align-items:flex-end;justify-content:center}
+  .modal.on{display:flex}
+  .modal.center{align-items:center;padding:30px}
+  .modal .box{background:var(--surface);border:1px solid var(--line);border-radius:22px;padding:22px;text-align:center;width:100%}
+  .sheet{background:var(--surface);border-top:1px solid var(--line);border-radius:24px 24px 0 0;padding:18px 18px 28px;width:100%;max-height:85%;overflow-y:auto;text-align:left}
+  .sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--track2);margin:0 auto 14px}
+  /* live bus directions (Google) */
+  #homeMap{position:absolute;inset:0;display:none}
+  .map.live #homeMap{display:block}
+  .map.live>img,.map.live .mk,.map.live .me{display:none}
+  .tp{padding:14px 16px 8px;flex-shrink:0}
+  .od{display:flex;gap:8px;align-items:center}
+  .od .fields{flex:1;display:flex;flex-direction:column;gap:6px}
+  .od .f{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:0 12px;height:40px}
+  .od input{background:none;border:0;color:var(--ink);font:500 14px Inter,system-ui;width:100%;outline:none;min-width:0}
+  .swap{width:34px;height:34px;border-radius:50%;background:var(--surface2);display:grid;place-items:center;font-size:16px;flex-shrink:0}
+  .when{display:flex;gap:8px;margin-top:8px;align-items:center}
+  .when select,.when input{background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 8px;font:500 13px Inter,system-ui}
+  .when .go{margin-left:auto;background:linear-gradient(90deg,var(--red),var(--orange));color:#000;font-weight:700;border-radius:10px;padding:8px 14px;font-size:13px}
+  .gmap{flex:0 0 210px;position:relative;background:#e8eaed;overflow:hidden}
+  .gmap #transitMap{position:absolute;inset:0}
+  .gmap .msg{position:absolute;inset:0;display:grid;place-items:center;color:#444;font-size:12.5px;text-align:center;padding:20px;line-height:1.5}
+  .tlist{flex:1;overflow-y:auto;padding:0 16px 24px;scrollbar-width:none}
+  .tlist::-webkit-scrollbar{display:none}
+  .opt{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-top:10px;width:100%;text-align:left;display:block}
+  .opt.sel{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange) inset}
+  .opt .tm{font-size:15.5px;font-weight:700}
+  .segs{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--muted)}
+  .segs svg{width:16px;height:16px;display:block}
+  .bchip{font:700 12px Inter,system-ui;padding:3px 7px;border-radius:6px;display:inline-flex;gap:4px;align-items:center}
+  .bchip svg{width:13px;height:13px}
+  .steps{margin-top:10px;border-top:1px solid var(--line);padding-top:4px}
+  .stp{display:flex;gap:10px;padding:8px 0;font-size:13px;line-height:1.4}
+  .stp .bar{width:4px;border-radius:2px;flex-shrink:0}
+  .stp small{display:block;color:var(--muted);font-size:12px}
+  .keycard input{width:100%;margin-top:8px;background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--ink);font:13px ui-monospace,monospace}
+  .src-note{font-size:11px;color:var(--muted);text-align:center;margin-top:14px;line-height:1.5}
+  .scanbox{width:180px;height:180px;margin:10px auto 14px;border:3px solid var(--orange);border-radius:18px;position:relative;overflow:hidden}
+  .scanbox::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--orange);box-shadow:0 0 12px var(--orange);animation:scan 1.4s ease-in-out infinite alternate}
+  @keyframes scan{from{top:4%}to{top:94%}}
+</style>
+</head>
+<body>
+
+<aside class="notes">
+  <img src="{{WORDMARK}}" alt="Hokie Travel">
+  <div>Clickable prototype · Honors Studio Team 1 — “Getting There”</div>
+  <h2>How might we</h2>
+  <div class="q">How might we reduce transportation barriers for Virginia Tech students caused by unreliable bus access and limited parking availability?</div>
+  <h2>Purpose</h2>
+  <div>A one-stop alternative to finding transportation for VT students. Today, Blacksburg Transit, RIDE Solutions, Parking Services and bike permits are separate, disconnected tools. That fragmentation is the root of the problem.</div>
+  <h2>Jump to a screen</h2>
+  <ol>
+    <li><a data-jump="splash">Splash (team logo)</a></li>
+    <li><a data-jump="home">Home map · Hi Bob</a></li>
+    <li><a data-jump="transit">Live bus directions (Google) ●</a></li>
+    <li><a data-jump="search">Trip planner</a></li>
+    <li><a data-jump="results">Compare options</a></li>
+    <li><a data-jump="busdetail">Bus trip + capacity</a></li>
+    <li><a data-jump="bus">Bus schedule & tracking</a></li>
+    <li><a data-jump="bike">Bike rental</a></li>
+    <li><a data-jump="carpool">Carpool</a></li>
+    <li><a data-jump="rental">Car rental</a></li>
+    <li><a data-jump="parking">Parking</a></li>
+    <li><a data-jump="plan">Calendar auto-planner ★</a></li>
+  </ol>
+  <h2>Theme</h2>
+  <div><a data-theme-set="dark">Dark</a> · <a data-theme-set="light">Light</a> <span id="themeNow" style="color:var(--notes-h)"></span></div>
+  <h2>Demo path</h2>
+  <div>Tap splash → Calendar tab → connect calendars → “Plan my rides” → watch it re-plan when the bus fills up → open Saturday’s Cascades trip.</div>
+  <h2>Note</h2>
+  <div>Routes, times, lot counts and prices are sample data for the prototype.</div>
+</aside>
+
+<div class="phone" id="phone">
+
+  <!-- SPLASH -->
+  <section class="screen on" id="s-splash" data-go="loading:home">
+    <img class="logo" src="{{LOGO}}" alt="Hokie Travel logo">
+    <img class="wm" src="{{WORDMARK}}" alt="Hokie Travel">
+    <div class="tap">Tap to start</div>
+  </section>
+
+  <!-- LOADING (team's route graphic) -->
+  <section class="screen" id="s-loading">
+    <img class="wordmark" src="{{WORDMARK}}" alt="Hokie Travel" style="height:40px;margin:26px auto 0">
+    <img class="route" src="{{ROUTE}}" alt="">
+    <svg class="spinner" viewBox="0 0 44 44" id="spin"></svg>
+    <div id="loadMsg"></div>
+  </section>
+
+  <!-- HOME -->
+  <section class="screen tabscreen" id="s-home">
+    <div class="homebar">
+    <button class="search" data-go="transit">
+      <svg width="26" height="26" viewBox="0 0 24 24"><circle cx="10" cy="10" r="7" fill="#bfe3f5" stroke="#445" stroke-width="2"/><path d="M10 5a5 5 0 0 1 5 5" stroke="#ff8a4c" stroke-width="2" fill="none"/><path d="M15 15l6 6" stroke="#e8634a" stroke-width="3" stroke-linecap="round"/></svg>
+      Get Directions
+    </button>
+    <button class="themebtn" id="themeBtn" aria-label="Switch to light mode">☀</button>
+    </div>
+    <div class="map" id="homeMapWrap">
+      <img src="{{MAP}}" alt="Map of Blacksburg">
+      <div id="homeMap"></div>
+      <div class="me"></div>
+      <div class="mk bus1">TC</div><div class="mk bus2">UMS</div>
+      <button class="livebtn" data-go="bus">● Live buses</button>
+    </div>
+    <div class="greet">
+      <div class="top">
+        <div><small>Hi Bob,</small><span class="hi">Take a ride</span></div>
+        <button class="qr" data-modal="scan">
+          <svg width="34" height="34" viewBox="0 0 21 21" fill="#fff"><path d="M0 0h7v7H0zM2 2v3h3V2zM14 0h7v7h-7zm2 2v3h3V2zM0 14h7v7H0zm2 2v3h3v-3zM9 0h2v2H9zm0 4h3v3H9zm-1 5h3v3H8zm5 0h3v2h-3zm5 0h3v3h-3zM9 14h2v3H9zm4-1h3v3h-3zm4 4h4v4h-2v-2h-2zm-6 2h4v2h-4z"/></svg>
+          OR A RIDE
+        </button>
+      </div>
+      <button class="next" data-tab="plan"><span id="homeNext"><b>Connect your calendar</b> — we’ll plan every ride for you</span><span>›</span></button>
+    </div>
+  </section>
+
+  <!-- SEARCH / TRIP PLANNER -->
+  <section class="screen" id="s-search">
+    <div class="topbar"><button class="back" data-back>‹</button><h2>Trip planner</h2></div>
+    <div class="scroll">
+      <div class="field"><span class="dot" style="background:var(--good)"></span><div style="flex:1"><label>From</label><input id="from" value="Home · Toms Creek Rd"></div></div>
+      <div class="field"><span class="dot" style="background:var(--red)"></span><div style="flex:1"><label>To — search by building name</label><input id="to" placeholder="e.g. Pamplin, Squires, Turner"></div></div>
+      <div class="field"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <div style="flex:1"><label>Arrive by</label>
+          <select id="arrive"><option>9:00 AM</option><option selected>10:00 AM</option><option>12:15 PM</option><option>1:25 PM</option><option>3:30 PM</option><option>6:30 PM</option></select></div></div>
+      <div class="field" style="justify-content:space-between">
+        <div><div style="font-size:14px;font-weight:500">I have a car today</div><div class="t2">Adds driving + parking options</div></div>
+        <button class="toggle" id="carToggle" aria-label="I have a car"></button>
+      </div>
+      <button class="btn pri" id="goSearch">See my options</button>
+      <div class="alert inline blue"><span>💡</span><span>No street addresses needed. Search the building names you already know.</span></div>
+      <div class="sec">Popular on campus</div>
+      <div id="suggList"></div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="screen" id="s-results">
+    <div class="topbar"><button class="back" data-back>‹</button>
+      <div><h2 id="resTitle">To Pamplin Hall by 10:00</h2><div class="t2" id="resFrom">From Home · Toms Creek Rd</div></div></div>
+    <div class="chips" id="sortChips">
+      <button class="chip on" data-sort="reliable">Most reliable</button>
+      <button class="chip" data-sort="fast">Fastest</button>
+      <button class="chip" data-sort="cheap">Cheapest</button>
+    </div>
+    <div class="scroll" id="resList"></div>
+  </section>
+
+  <!-- LIVE BUS DIRECTIONS (Google Routes API + Maps JS) -->
+  <section class="screen" id="s-transit">
+    <div class="tp">
+      <div class="row" style="gap:10px;margin-bottom:10px"><button class="back" data-back>‹</button>
+        <h2 style="font-size:17px;font-weight:600;flex:1">Bus directions <span class="pill p-good" style="vertical-align:2px">● Live</span></h2>
+        <button class="chip" id="keyBtn" title="Google Maps API key">🔑</button></div>
+      <div class="od">
+        <div class="fields">
+          <div class="f"><span class="dot" style="background:var(--good)"></span><input id="tFrom" value="Toms Creek Rd & Progress St" placeholder="Starting point"><button id="myLoc" title="Use my location" style="font-size:15px">📍</button></div>
+          <div class="f"><span class="dot" style="background:var(--red)"></span><input id="tTo" placeholder="Where to? e.g. Pamplin Hall"></div>
+        </div>
+        <button class="swap" id="tSwap" aria-label="Swap">⇅</button>
+      </div>
+      <div class="when">
+        <select id="tWhen"><option value="now">Leave now</option><option value="dep">Depart at</option><option value="arr">Arrive by</option></select>
+        <input type="time" id="tTime" style="display:none">
+        <button class="go" id="tGo">Go</button>
+      </div>
+      <div class="chips" id="tPref" style="padding:8px 0 0">
+        <button class="chip on" data-pref="">Best route</button><button class="chip" data-pref="LESS_WALKING">Less walking</button><button class="chip" data-pref="FEWER_TRANSFERS">Fewer transfers</button>
+      </div>
+    </div>
+    <div class="gmap"><div id="transitMap"></div><div class="msg" id="tMapMsg">Enter a destination to see bus routes</div></div>
+    <div class="tlist" id="tList"></div>
+  </section>
+
+  <!-- BUS DETAIL -->
+  <section class="screen" id="s-busdetail">
+    <div class="topbar"><button class="back" data-back>‹</button><h2>Bus · Toms Creek (TC)</h2></div>
+    <div class="scroll">
+      <div class="card">
+        <div class="row sb"><div><div class="t2">Leave home by</div><div class="big">9:31 AM</div></div>
+          <div style="text-align:right"><div class="t2">Arrive</div><div class="big">9:53 AM</div></div></div>
+        <div class="facts">
+          <div class="fact"><b style="color:var(--warn)">High</b><span>Capacity 82%</span></div>
+          <div class="fact"><b>74%</b><span>On time this week</span></div>
+          <div class="fact"><b style="color:var(--bad)">2</b><span>Skipped-stop reports today</span></div>
+        </div>
+      </div>
+      <div class="tl">
+        <div>Walk to Toms Creek & Progress St<small>4 min · 9:31–9:35</small></div>
+        <div>TC bus arrives 9:37 <span class="pill p-warn">±3 min</span><small>Live tracking · updated 20s ago</small></div>
+        <div>Ride 6 stops to Squires / College Ave<small>11 min</small></div>
+        <div>Walk to Pamplin Hall<small>5 min · arrive 9:53</small></div>
+      </div>
+      <div class="card" style="border-color:var(--warm-line)">
+        <div class="t1">Backup plan if this bus is full</div>
+        <div class="t2" style="margin-top:6px;line-height:1.5">Carpool: Maya R. leaves Toms Creek Rd 9:30 (1 seat)<br>Next TC at 9:49 → arrive 10:05 (5 min late)</div>
+      </div>
+      <button class="btn pri" data-toast="We’ll ping you when the TC is 5 minutes from your stop.">Notify me when it’s 5 min away</button>
+      <div class="sec">On the bus? Help other riders</div>
+      <div class="grid3">
+        <button class="rep" data-toast="Thanks! Riders at the next 3 stops now see “Bus full”."><svg viewBox="0 0 24 24" fill="#ff8a4c"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><path d="M1 21v-3c0-3 3-5 6-5s6 2 6 5v3zm12 0v-3c0-1-.3-2-1-3 1-.6 3-1 5-1 3 0 6 2 6 5v2z"/></svg>Bus full</button>
+        <button class="rep" data-toast="Reported. Riders on TC can now see skipped-stop reports."><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a4c" stroke-width="2.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>Skipped stop</button>
+        <button class="rep" data-toast="Thanks — arrival estimate updated for everyone."><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a4c" stroke-width="2.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Running late</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- BUS LIST -->
+  <section class="screen" id="s-bus">
+    <div class="topbar"><button class="back" data-back>‹</button><h2>Bus · schedule, tracking, capacity</h2></div>
+    <div class="scroll">
+      <div class="alert inline"><span>❄</span><span><b>Icy roads this morning.</b> Buses may run 5–10 min behind. Leave-by times already account for it.</span></div>
+      <div class="sec">Near you · Toms Creek & Progress St</div>
+      <div id="busList"></div>
+    </div>
+  </section>
+
+  <!-- BIKE RENTAL -->
+  <section class="screen tabscreen" id="s-bike">
+    <div class="scroll">
+      <div class="t1" style="font-size:18px">Bike rental</div>
+      <div class="t2">E-bikes & scooters at campus hotspots with charging</div>
+      <div class="card" style="margin-top:12px">
+        <div class="row sb"><div><div class="t2">Nearest available</div><div class="t1">E-bike #214 · Toms Creek hotspot</div><div class="t2">1 min walk · 92% battery</div></div></div>
+        <div class="row" style="gap:8px;margin-top:12px">
+          <button class="btn pri small" data-modal="scan">Scan to unlock</button>
+          <button class="btn sec2 small" data-toast="E-bike #214 reserved for 15 minutes.">Reserve ahead</button>
+        </div>
+      </div>
+      <div class="sec">Plans</div>
+      <div class="seg" id="bikePlan">
+        <button class="on" data-p="$1 per 30 min">Per ride</button><button data-p="$8 / week · unlimited 45-min rides">Week</button><button data-p="$20 / month · unlimited 45-min rides">Month</button><button data-p="$60 / semester · keep one bike all semester">Semester</button>
+      </div>
+      <div class="card" style="margin-top:8px"><div class="row sb"><div class="t1" id="bikePrice">$1 per 30 min</div><button class="chip on" data-toast="Plan selected. Charged to your Hokie Passport.">Choose</button></div></div>
+      <div class="sec">Hotspots nearby</div>
+      <div id="bikeList"></div>
+      <div class="alert inline blue"><span>📍</span><span>Bikes are registered and GPS-tracked. They power down outside the Blacksburg service area and must be returned to a hotspot.</span></div>
+    </div>
+  </section>
+
+  <!-- CARPOOL -->
+  <section class="screen tabscreen" id="s-carpool">
+    <div class="scroll">
+      <div class="seg" id="poolSeg" style="margin-top:0">
+        <button class="on" data-v="find">Find a ride</button><button data-v="groups">My groups</button><button data-v="drive">Drive & earn</button>
+      </div>
+      <div id="poolFind">
+        <div class="card" style="background:var(--cool-card);border-color:var(--cool-line2)">
+          <div class="row sb"><div><div class="t2">Closest ride right now</div><div class="t1">Maya R. · 0.3 mi away</div><div class="t2">Heading to Drillfield · arrives at your pickup in 4 min</div></div></div>
+          <button class="btn pri" data-toast="Ride requested — Maya will pick you up at Toms Creek & Progress St.">Request this ride</button>
+        </div>
+        <div class="sec">Plan ahead · students heading to campus</div>
+        <div id="poolList"></div>
+      </div>
+      <div id="poolGroups" style="display:none">
+        <div class="card"><div class="row sb"><div><div class="t1">Toms Creek → Drillfield</div><div class="t2">Mon · Wed · Fri · 9:30 AM · 4 members</div></div><span class="pill p-good">Recurring</span></div>
+          <div class="t2" style="margin-top:8px">Drivers rotate weekly · next driver: Jordan K.</div></div>
+        <div class="card"><div class="row sb"><div><div class="t1">Library late-study ride home</div><div class="t2">Tue · Thu · 9:00 PM · 3 members</div></div><span class="pill p-good">Recurring</span></div>
+          <div class="t2" style="margin-top:8px">Drops each member off on the way · leaves from Newman Library</div></div>
+        <button class="btn pri" data-toast="Group created — invite classmates with a link.">+ Create a carpool group</button>
+      </div>
+      <div id="poolDrive" style="display:none">
+        <div class="card"><div class="t1">Why drive?</div>
+          <div class="t2" style="margin-top:6px;line-height:1.6">Riders pay a small fee, which covers your gas. You also earn rewards at local and campus spots.</div>
+          <div class="facts"><div class="fact"><b>$4</b><span>Avg. per trip</span></div><div class="fact"><b>30% off</b><span>Local restaurant partners</span></div><div class="fact"><b>50% off</b><span>Dining hall meal after 10 rides</span></div></div>
+        </div>
+        <button class="btn pri" data-toast="You’re offering 3 seats · Toms Creek → Drillfield · 9:30 AM.">Offer a ride</button>
+      </div>
+      <div class="sec">Safety</div>
+      <div class="card">
+        <div class="t2" style="line-height:1.7">✓ Verified VT students only — rides with peers, not strangers<br>✓ Opt-in, like Uber: sign up only if you want<br>✓ Live trip tracking, shareable with friends<br>✓ No carpools 12 AM – 5 AM or on football game days</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CAR RENTAL -->
+  <section class="screen tabscreen" id="s-rental">
+    <div class="scroll">
+      <div class="t1" style="font-size:18px">Car rental</div>
+      <div class="t2">Pick up on campus. You don’t need a car to get to your car.</div>
+      <div class="chips" style="padding:12px 0 0" id="carType">
+        <button class="chip on" data-t="all">Any</button><button class="chip" data-t="Hybrid">Hybrid</button><button class="chip" data-t="Sedan">Sedan</button><button class="chip" data-t="SUV">SUV</button><button class="chip" data-t="Van">Van · moving</button>
+      </div>
+      <div class="seg" id="carDur">
+        <button data-d="hr">Hour</button><button class="on" data-d="day">Day</button><button data-d="wk">Week</button><button data-d="mo">Month</button><button data-d="sem">Semester</button>
+      </div>
+      <div class="alert inline blue"><span>🎓</span><span>Student discount applied. Gas, insurance and campus parking included.</span></div>
+      <div id="carList"></div>
+    </div>
+  </section>
+
+  <!-- PARKING -->
+  <section class="screen tabscreen" id="s-parking">
+    <div class="scroll">
+      <div class="t1" style="font-size:18px">Parking</div>
+      <div class="t2">Permit required 7 AM – 10 PM, Mon–Fri · your plate is your permit</div>
+      <div class="chips" style="padding:12px 0 0" id="permitChips">
+        <button class="chip on" data-permit="Commuter">Commuter</button>
+        <button class="chip" data-permit="Resident">Resident</button>
+        <button class="chip" data-permit="Hourly">No permit · hourly</button>
+      </div>
+      <div class="card" style="background:var(--warm-card);border-color:var(--warm-line)">
+        <div class="row"><div class="ic"><svg viewBox="0 0 24 24" fill="#fff"><path d="M6 3h7a6 6 0 0 1 0 12H10v6H6zm4 4v4h3a2 2 0 0 0 0-4z"/></svg></div>
+          <div><div class="t1">Best bet right now</div><div class="t2" id="bestLot"></div></div></div>
+      </div>
+      <div class="sec">Lots · updated 1 min ago</div>
+      <div id="lotList"></div>
+      <div class="sec">Empty but restricted?</div>
+      <div class="card">
+        <div class="row sb"><div><div class="t1">Cassell Coliseum Lot</div><div class="t2">Athletes only · 64% empty right now</div></div><span class="pill p-warn">Restricted</span></div>
+        <div class="t2" style="margin-top:8px;line-height:1.5">Parking here without the right permit is a <b style="color:var(--bad)">$40 ticket</b>. Time-slot sharing would let you reserve an empty space for a few hours instead.</div>
+        <button class="btn sec2" data-toast="Time-slot request sent: Cassell Lot, 10 AM – 12 PM (proposed feature).">Request a 2-hour time slot</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CALENDAR / AUTO-PLANNER -->
+  <section class="screen tabscreen" id="s-plan">
+    <!-- connect state -->
+    <div class="scroll" id="planConnect">
+      <div class="t1" style="font-size:20px">Connect your calendar</div>
+      <div class="t2" style="line-height:1.5">Hokie Travel reads where you need to be and when, then books every ride for you. You never have to open another app.</div>
+      <div class="card" id="calList" style="padding:4px 14px"></div>
+      <div class="sec">When it plans your rides</div>
+      <div class="card" style="padding:4px 14px">
+        <div class="setrow"><div><div class="t1">Book rides automatically</div><div class="t2">Carpools, rentals, bus alerts</div></div><button class="toggle on"></button></div>
+        <div class="setrow"><div><div class="t1">Hold bikes for me</div><div class="t2">Reserves 15 min before you leave</div></div><button class="toggle on"></button></div>
+        <div class="setrow"><div><div class="t1">Re-plan if a bus is full or late</div><div class="t2">Switches you to the next best option</div></div><button class="toggle on"></button></div>
+        <div class="setrow"><div><div class="t1">Leave-now alerts</div><div class="t2">Push notification at your leave-by time</div></div><button class="toggle on"></button></div>
+        <div class="setrow"><div><div class="t1">Arrive early by</div></div>
+          <select style="background:var(--surface2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 8px;font:inherit"><option>5 min</option><option selected>10 min</option><option>15 min</option></select></div>
+      </div>
+      <button class="btn pri" id="planBtn" disabled style="opacity:.4">Plan my rides</button>
+      <div class="t2" style="text-align:center;margin-top:8px" id="planHint">Connect at least one calendar to start</div>
+    </div>
+    <!-- planned state -->
+    <div class="scroll" id="planDay" style="display:none">
+      <div class="row sb">
+        <div><div class="t1" style="font-size:18px">Your rides, planned</div><div class="t2" id="calConnectedTxt"></div></div>
+        <button class="chip" id="planSettings">⚙ Settings</button>
+      </div>
+      <div class="seg" id="daySeg">
+        <button class="on" data-day="thu">Today · Thu</button><button data-day="fri">Fri</button><button data-day="sat">Sat</button>
+      </div>
+      <div class="replan" id="replan">
+        <div class="row sb"><div class="t1">⚡ Re-planned automatically</div><button class="chip" id="undoReplan">Undo</button></div>
+        <div class="t2" style="margin-top:6px;line-height:1.5;color:var(--warm-ink2)">The 9:37 TC bus is now <b>full</b> (rider reports). We moved you to Maya’s carpool, which leaves at 9:30. You’ll still be at Pamplin by 9:47.</div>
+      </div>
+      <div id="dayList"></div>
+    </div>
+  </section>
+
+  <nav class="nav hide" id="nav">
+    <button data-tab="home" aria-label="Bus"><img src="{{NAV_BUS}}" alt=""></button>
+    <button data-tab="bike" aria-label="Rent a bike"><img src="{{NAV_BIKE}}" alt=""></button>
+    <button data-tab="carpool" aria-label="Carpool"><img src="{{NAV_CARPOOL}}" alt="" style="height:36px"></button>
+    <button data-tab="rental" aria-label="Car rental"><img class="wide" src="{{NAV_RENTAL}}" alt=""></button>
+    <button data-tab="parking" aria-label="Parking"><div class="pk"><svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" fill="none" stroke="#000" stroke-width="2.6"/><path d="M9 18V6h4a3.5 3.5 0 0 1 0 7H9" fill="none" stroke="#000" stroke-width="2.6"/></svg><span>PARKING</span></div></button>
+    <button data-tab="plan" aria-label="Calendar planner"><img src="{{NAV_CAL}}" alt=""></button>
+  </nav>
+
+  <!-- scan modal -->
+  <div class="modal center" id="m-scan"><div class="box">
+    <div class="t1" id="scanTitle">Point at the QR on the bike</div>
+    <div class="scanbox"></div>
+    <div class="t2" id="scanSub">Scanning…</div>
+    <button class="btn sec2" data-close>Close</button>
+  </div></div>
+
+  <!-- leg change sheet -->
+  <div class="modal" id="m-leg"><div class="sheet">
+    <div class="grab"></div>
+    <div class="t1" id="legTitle" style="font-size:17px">Change this ride</div>
+    <div class="t2" id="legSub"></div>
+    <div id="legOpts"></div>
+    <button class="btn sec2" data-close>Keep current plan</button>
+  </div></div>
+
+  <!-- rental booking sheet -->
+  <div class="modal" id="m-car"><div class="sheet">
+    <div class="grab"></div>
+    <div class="t1" id="carTitle" style="font-size:17px"></div>
+    <div class="t2" id="carSub"></div>
+    <div class="facts" id="carFacts"></div>
+    <button class="btn pri" id="carBook">Book</button>
+    <button class="btn sec2" data-close>Cancel</button>
+  </div></div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+/* ---------- sample data ---------- */
+const PLACES=[["Pamplin Hall","Business · Drillfield"],["Newman Library","Drillfield"],["Squires Student Center","College Ave"],["Turner Place","Dining · Lavery Hall"],["Torgersen Hall","Engineering"],["McBryde Hall","Drillfield"],["Burruss Hall","Drillfield"]];
+const BUSES=[
+  {r:"TC",name:"Toms Creek",min:3,next:"9:37 · 9:49 · 10:01",crowd:82,ontime:74,note:"2 skipped-stop reports today"},
+  {r:"UMS",name:"University Mall Shuttle",min:7,next:"9:41 · 9:56 · 10:11",crowd:45,ontime:88,note:""},
+  {r:"HWA",name:"Hethwood A",min:12,next:"9:46 · 10:16",crowd:96,ontime:61,note:"Full at the last 2 stops"},
+  {r:"CRC",name:"Corporate Research Ctr",min:19,next:"9:53 · 10:23",crowd:20,ontime:92,note:"Map glitch: bus running but not showing"}
+];
+const LOTS=[
+  {n:"Perry Street Lot",p:["Commuter"],open:14,cap:600,walk:7},
+  {n:"Duck Pond Lot",p:["Commuter","Resident"],open:0,cap:300,walk:9},
+  {n:"Chicken Hill Lot",p:["Commuter"],open:118,cap:900,walk:15,extra:"BT shuttle every 10 min"},
+  {n:"Lee Hall Lot",p:["Resident"],open:23,cap:250,walk:10},
+  {n:"Cage Lot",p:["Commuter","Resident"],open:240,cap:1300,walk:18,extra:"Closed on game days"},
+  {n:"North End Garage",p:["Hourly"],open:62,cap:1000,walk:9,extra:"Hourly via app"},
+  {n:"Peripheral Lot A",p:["Hourly"],open:40,cap:200,walk:14,extra:"Hourly via app"}
+];
+const POOLS=[
+  {n:"Maya R.",from:"Toms Creek Rd",leave:"9:30 AM",to:"Drillfield",seats:1,cost:"$2"},
+  {n:"Jordan K.",from:"Foxridge",leave:"9:40 AM",to:"Perry St",seats:2,cost:"$2"},
+  {n:"Priya S.",from:"Newman Library",leave:"9:00 PM",to:"Toms Creek & Hethwood",seats:3,cost:"$2"}
+];
+const BIKES=[{n:"Toms Creek & Progress",b:2,d:"1 min",c:"4 docks · charging"},{n:"Squires / College Ave",b:6,d:"—",c:"10 docks · charging"},{n:"Turner Place",b:4,d:"—",c:"8 docks · charging"},{n:"Newman Library",b:0,d:"—",c:"8 docks · charging"}];
+const CARS=[
+  {m:"Toyota Prius",t:"Hybrid",loc:"Squires Lot",walk:"4 min",hr:7.5,day:59,wk:249,mo:699,sem:2400},
+  {m:"Honda Civic",t:"Sedan",loc:"Drillfield Lot",walk:"8 min",hr:8,day:62,wk:259,mo:729,sem:2500},
+  {m:"Honda CR-V",t:"SUV",loc:"Squires Lot",walk:"4 min",hr:9.5,day:72,wk:299,mo:849,sem:2900},
+  {m:"Ford Transit Connect",t:"Van",loc:"Cage Lot",walk:"18 min",hr:12,day:89,wk:349,mo:0,sem:0,note:"Great for move-in / move-out"}
+];
+const DUR={hr:["hour","hr"],day:["day","day"],wk:["week","wk"],mo:["month","mo"],sem:["semester","sem"]};
+const CALS=[
+  {id:"g",n:"Google Calendar",c:"#4285f4",l:"G",d:"Personal events, clubs, plans with friends"},
+  {id:"o",n:"VT Outlook",c:"#0a64c8",l:"O",d:"Advising, office hours, VT meetings"},
+  {id:"a",n:"Apple Calendar",c:"#e5484d",l:"",d:"iPhone calendar events"},
+  {id:"c",n:"Canvas · class schedule",c:"#d64027",l:"C",d:"Every class time and room, automatically"}
+];
+const SRC={g:["GOOGLE","#4285f4"],o:["OUTLOOK","#0a64c8"],a:["APPLE","#e5484d"],c:["CANVAS","#d64027"]};
+
+/* icons */
+const I={
+  bus:`<svg viewBox="0 0 24 24" fill="#fff"><rect x="5" y="3" width="14" height="15" rx="3"/><rect x="7" y="6" width="10" height="5" fill="#7b1c1c"/><rect x="6" y="18" width="3" height="3"/><rect x="15" y="18" width="3" height="3"/></svg>`,
+  car:`<svg viewBox="0 0 24 24" fill="#fff"><path d="M3 17v-5l2-5c.5-1 1-2 2-2h10c1 0 1.5 1 2 2l2 5v5zM6 12h12l-1.5-4h-9z"/><rect x="4" y="17" width="4" height="3"/><rect x="16" y="17" width="4" height="3"/></svg>`,
+  pool:`<svg viewBox="0 0 24 24" fill="#fff"><circle cx="8" cy="7" r="3"/><circle cx="16" cy="7" r="3"/><path d="M2 20v-2c0-3 3-5 6-5s6 2 6 5v2zm12 0v-2c0-1-.3-2-1-3 1-.5 2-1 3-1 3 0 6 2 6 5v1z"/></svg>`,
+  walk:`<svg viewBox="0 0 24 24" fill="#fff"><circle cx="13" cy="4" r="2"/><path d="M10 22l2-7 2 2v5h2v-6l-2-2 1-4c1 1 3 2 5 2v-2c-2 0-3-1-4-2l-1-1.5c-.5-.5-1-.5-1.5-.5L8 8v4h2V9.5l2-.5-3 13z"/></svg>`,
+  bike:`<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="6" cy="16" r="4"/><circle cx="18" cy="16" r="4"/><path d="M6 16l4-8h5l3 8M10 8l4 8"/></svg>`
+};
+
+/* ---------- light / dark theme ---------- */
+function applyTheme(t,save=true){
+  document.documentElement.dataset.theme=t;
+  const b=document.getElementById("themeBtn");
+  b.textContent=t==="light"?"☾":"☀"; b.setAttribute("aria-label",t==="light"?"Switch to dark mode":"Switch to light mode");
+  document.getElementById("themeNow").textContent="(now "+t+")";
+  if(save){ try{localStorage.setItem("ht_theme",t);}catch(e){} }
+}
+(function(){ let t=null; try{t=localStorage.getItem("ht_theme");}catch(e){}
+  if(t!=="light"&&t!=="dark") t=(window.matchMedia&&matchMedia("(prefers-color-scheme: light)").matches)?"light":"dark";
+  applyTheme(t,false); })();
+document.getElementById("themeBtn").onclick=()=>{ const t=document.documentElement.dataset.theme==="light"?"dark":"light"; applyTheme(t); toast(t==="light"?"Light mode on":"Dark mode on"); };
+document.addEventListener("click",e=>{ const a=e.target.closest("[data-theme-set]"); if(a) applyTheme(a.dataset.themeSet); });
+
+/* ---------- navigation ---------- */
+const $=s=>document.querySelector(s);
+const hist=[]; let cur="splash";
+const NAV_ON=["home","bike","carpool","rental","parking","plan"];
+function show(id,{push=true}={}){
+  if(push&&cur!==id&&cur!=="loading") hist.push(cur);
+  document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("on",s.id==="s-"+id));
+  cur=id;
+  $("#nav").classList.toggle("hide",!NAV_ON.includes(id));
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.tab===id));
+  if(id==="plan") onPlanShown();
+  if(id==="home") initHomeMap();
+  if(id==="transit") onTransitShown();
+}
+function loadThen(target,msg="",ms=900){ $("#loadMsg").textContent=msg; show("loading"); setTimeout(()=>show(target,{push:false}),ms); }
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]"); if(g){const v=g.dataset.go; v.startsWith("loading:")?loadThen(v.split(":")[1]):show(v);}
+  const t=e.target.closest("[data-tab]"); if(t){const id=t.dataset.tab; if(id!==cur) (id==="home"?show("home"):loadThen(id));}
+  if(e.target.closest("[data-back]")) show(hist.pop()||"home",{push:false});
+  const ts=e.target.closest("[data-toast]"); if(ts) toast(ts.dataset.toast);
+  if(e.target.closest("[data-modal]")) openScan();
+  if(e.target.closest("[data-close]")) document.querySelectorAll(".modal").forEach(m=>m.classList.remove("on"));
+  const j=e.target.closest("[data-jump]"); if(j){ if(j.dataset.jump==="results") buildResults(); show(j.dataset.jump); }
+  const tg=e.target.closest(".setrow .toggle"); if(tg) tg.classList.toggle("on");
+});
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("on");}));
+let tt; function toast(msg){const el=$("#toast");el.textContent=msg;el.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("on"),2800);}
+function openScan(){
+  $("#m-scan").classList.add("on"); $("#scanTitle").textContent="Point at the QR on the bike"; $("#scanSub").textContent="Scanning…";
+  setTimeout(()=>{ if(!$("#m-scan").classList.contains("on"))return; $("#scanTitle").textContent="E-bike #214 unlocked"; $("#scanSub").textContent="Ride timer started · $1 per 30 min";},1700);
+}
+(function(){let sp="";for(let i=0;i<12;i++)sp+=`<rect x="20.5" y="2" width="3" height="10" rx="1.5" fill="currentColor" opacity="${(i+1)/12}" transform="rotate(${i*30} 22 22)"/>`;$("#spin").innerHTML=sp;})();
+
+/* ---------- trip planner ---------- */
+$("#suggList").innerHTML=PLACES.map(([n,s])=>`<button class="sugg" data-place="${n}">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff8a4c"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+  <div><div style="font-size:14.5px;font-weight:500">${n}</div><div class="t2">${s}</div></div></button>`).join("");
+$("#suggList").addEventListener("click",e=>{const p=e.target.closest("[data-place]");if(p){$("#to").value=p.dataset.place;buildResults();show("results");}});
+$("#goSearch").onclick=()=>{ if(!$("#to").value.trim()) $("#to").value="Pamplin Hall"; buildResults(); show("results"); };
+let hasCar=false; $("#carToggle").onclick=e=>{hasCar=!hasCar;e.currentTarget.classList.toggle("on",hasCar);};
+
+let sortBy="reliable";
+function buildResults(){
+  const to=$("#to").value||"Pamplin Hall", t=$("#arrive").value.replace(/ (AM|PM)/,"");
+  $("#resTitle").textContent=`To ${to} by ${t}`; $("#resFrom").textContent="From "+($("#from").value||"your location");
+  const opts=[
+    {rel:74,time:22,cost:0,go:"busdetail",html:`<div class="row sb"><div class="row"><div class="ic">${I.bus}</div><div><div class="t1">Bus · TC Toms Creek</div><div class="t2">Arrives 9:37 · at Pamplin 9:53</div></div></div><div class="big">22m</div></div>
+      <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><span class="pill p-warn">High capacity 82%</span><span class="pill p-warn">74% on time</span><span class="pill p-good">Free</span></div>`},
+    {rel:hasCar?88:0,time:hasCar?15:99,cost:hasCar?3:99,go:"parking",html:hasCar?`<div class="row sb"><div class="row"><div class="ic">${I.car}</div><div><div class="t1">Drive · 8 min</div><div class="t2">+ 7 min walk from Perry Street Lot</div></div></div><div class="big">15m</div></div>
+      <div class="row" style="gap:6px;margin-top:10px;flex-wrap:wrap"><span class="pill p-good">14 spots open nearby</span><span class="pill p-bad">Duck Pond full</span></div>`
+      :`<div class="row sb"><div class="row"><div class="ic" style="background:var(--dim-ic)">${I.car}</div><div><div class="t1" style="color:var(--dim)">Drive · 8 min</div><div class="t2">Turn on “I have a car” to see parking</div></div></div><div class="big" style="color:var(--dim)">—</div></div>`},
+    {rel:90,time:17,cost:2,go:"carpool",html:`<div class="row sb"><div class="row"><div class="ic">${I.pool}</div><div><div class="t1">Carpool · Maya R.</div><div class="t2">Leaves Toms Creek Rd 9:30 · 1 seat left</div></div></div><div class="big">17m</div></div>
+      <div class="row" style="gap:6px;margin-top:10px"><span class="pill p-good">Verified Hokie</span><span class="pill p-good">$2</span></div>`},
+    {rel:95,time:14,cost:1,go:"bike",html:`<div class="row sb"><div class="row"><div class="ic">${I.bike}</div><div><div class="t1">Bike · 9 min + walk 5</div><div class="t2">E-bike at Toms Creek hotspot · drop at Squires</div></div></div><div class="big">14m</div></div>
+      <div class="row" style="gap:6px;margin-top:10px"><span class="pill p-good">2 bikes available</span><span class="pill p-good">$1</span></div>`},
+    {rel:98,time:22,cost:0,go:"search",html:`<div class="row sb"><div class="row"><div class="ic">${I.walk}</div><div><div class="t1">Walk</div><div class="t2">Leave by 9:28</div></div></div><div class="big">22m</div></div>`}
+  ];
+  const f={reliable:o=>-o.rel,fast:o=>o.time,cheap:o=>o.cost}[sortBy];
+  opts.sort((a,b)=>f(a)-f(b));
+  $("#resList").innerHTML=`<div class="t2" style="margin-top:12px">Every way to get there, compared on time, capacity, reliability and cost.</div>`+
+    opts.map((o,i)=>`<button class="card tap" data-go="${o.go}">${i===0?'<span class="pill p-best" style="margin-bottom:8px">Recommended</span>':''}${o.html}</button>`).join("")+
+    `<button class="btn sec2" data-toast="Added to your planner — Hokie Travel will book it and alert you when to leave.">＋ Plan this trip ahead</button>`;
+}
+$("#sortChips").addEventListener("click",e=>{const c=e.target.closest("[data-sort]");if(!c)return;sortBy=c.dataset.sort;
+  document.querySelectorAll("#sortChips .chip").forEach(x=>x.classList.toggle("on",x===c));buildResults();});
+
+/* ---------- bus ---------- */
+const lvl=(v,g,w)=>v<g?"good":v<w?"warn":"bad";
+$("#busList").innerHTML=BUSES.map(b=>{const c=lvl(b.crowd,60,85);return `<button class="card tap" data-go="busdetail">
+  <div class="row sb"><div class="row"><div class="ic">${b.r}</div><div><div class="t1">${b.name}</div><div class="t2">Next: ${b.next}</div></div></div>
+  <div style="text-align:right"><div class="big">${b.min}<span style="font-size:12px"> min</span></div></div></div>
+  <div class="row sb" style="margin-top:10px"><span class="t2">Capacity · ${b.ontime}% on time this week</span><span class="pill p-${c}">${b.crowd>=95?"Full":b.crowd>=80?"High":b.crowd>=60?"Busy":"Seats open"}</span></div>
+  <div class="meter"><i style="width:${b.crowd}%;background:var(--${c})"></i></div>
+  ${b.note?`<div class="t2" style="margin-top:8px;color:var(--warm-ink)">⚠ ${b.note}</div>`:""}</button>`;}).join("");
+
+/* ---------- bike ---------- */
+$("#bikeList").innerHTML=BIKES.map(b=>`<div class="card"><div class="row sb"><div><div class="t1">${b.n}</div><div class="t2">${b.c}${b.d!=="—"?" · "+b.d+" walk":""}</div></div>
+  <span class="pill ${b.b?'p-good':'p-bad'}">${b.b} bikes</span></div></div>`).join("");
+$("#bikePlan").addEventListener("click",e=>{const b=e.target.closest("[data-p]");if(!b)return;document.querySelectorAll("#bikePlan button").forEach(x=>x.classList.toggle("on",x===b));$("#bikePrice").textContent=b.dataset.p;});
+
+/* ---------- carpool ---------- */
+$("#poolList").innerHTML=POOLS.map(p=>`<div class="card"><div class="row"><div class="ic">${I.pool}</div>
+  <div style="flex:1"><div class="t1">${p.n}</div><div class="t2">${p.from} → ${p.to} · ${p.leave}</div></div></div>
+  <div class="row sb" style="margin-top:10px"><span class="t2">${p.seats} seat${p.seats>1?"s":""} · ${p.cost} · drops off on the way</span>
+  <button class="chip on" data-toast="Request sent to ${p.n}. You’ll get a notification when they accept.">Request</button></div></div>`).join("");
+$("#poolSeg").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(!b)return;
+  document.querySelectorAll("#poolSeg button").forEach(x=>x.classList.toggle("on",x===b));
+  $("#poolFind").style.display=b.dataset.v==="find"?"":"none";$("#poolGroups").style.display=b.dataset.v==="groups"?"":"none";$("#poolDrive").style.display=b.dataset.v==="drive"?"":"none";});
+
+/* ---------- car rental ---------- */
+let carT="all",carD="day";
+function buildCars(){
+  const list=CARS.filter(c=>carT==="all"||c.t===carT);
+  $("#carList").innerHTML=list.map((c,i)=>{const price=c[carD];return `<div class="card"><div class="row sb"><div class="row"><div class="ic">${I.car}</div>
+    <div><div class="t1">${c.m}</div><div class="t2">${c.t} · ${c.loc} · ${c.walk} walk</div></div></div></div>
+    ${c.note?`<div class="t2" style="margin-top:8px;color:var(--cool-ink)">${c.note}</div>`:""}
+    <div class="row sb" style="margin-top:10px"><span class="t1">${price?`$${price}<span class="t2"> / ${DUR[carD][1]}</span>`:`<span class="t2">Not available per ${DUR[carD][0]}</span>`}</span>
+    ${price?`<button class="chip on" data-car="${CARS.indexOf(c)}">Book</button>`:""}</div></div>`;}).join("");
+}
+buildCars();
+$("#carType").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;carT=b.dataset.t;document.querySelectorAll("#carType .chip").forEach(x=>x.classList.toggle("on",x===b));buildCars();});
+$("#carDur").addEventListener("click",e=>{const b=e.target.closest("[data-d]");if(!b)return;carD=b.dataset.d;document.querySelectorAll("#carDur button").forEach(x=>x.classList.toggle("on",x===b));buildCars();});
+$("#carList").addEventListener("click",e=>{const b=e.target.closest("[data-car]");if(!b)return;const c=CARS[b.dataset.car];
+  $("#carTitle").textContent=c.m; $("#carSub").textContent=`Pick up at ${c.loc} · ${c.walk} walk from you`;
+  $("#carFacts").innerHTML=`<div class="fact"><b>$${c[carD]}</b><span>per ${DUR[carD][0]}</span></div><div class="fact"><b>Included</b><span>Gas + insurance</span></div><div class="fact"><b>15% off</b><span>Student rate</span></div>`;
+  $("#m-car").classList.add("on");});
+$("#carBook").onclick=()=>{$("#m-car").classList.remove("on");toast("Booked! Unlock the car with your phone at pickup.");};
+
+/* ---------- parking ---------- */
+function buildLots(permit){
+  const list=LOTS.filter(l=>l.p.includes(permit)).sort((a,b)=>(b.open>0)-(a.open>0)||a.walk-b.walk);
+  const best=list.find(l=>l.open>5);
+  $("#bestLot").textContent=best?`${best.n} · ${best.open} spots · ${best.walk} min walk to Pamplin`:"No open lots — try the bus or a carpool";
+  $("#lotList").innerHTML=list.map(l=>{const pct=Math.round((1-l.open/l.cap)*100),c=l.open===0?"bad":pct>95?"warn":"good";
+    return `<div class="card"><div class="row sb"><div><div class="t1">${l.n}</div><div class="t2">${l.walk} min walk${l.extra?" · "+l.extra:""}</div></div>
+    <span class="pill p-${c}">${l.open===0?"Full":l.open+" open"}</span></div>
+    <div class="meter"><i style="width:${pct}%;background:var(--${c})"></i></div></div>`;}).join("");
+}
+buildLots("Commuter");
+$("#permitChips").addEventListener("click",e=>{const c=e.target.closest("[data-permit]");if(!c)return;
+  document.querySelectorAll("#permitChips .chip").forEach(x=>x.classList.toggle("on",x===c));buildLots(c.dataset.permit);});
+
+/* ---------- calendar auto-planner ---------- */
+const connected=new Set(); let planned=false, replanned=false, day="thu";
+function renderCals(){
+  $("#calList").innerHTML=CALS.map(c=>`<div class="setrow">
+    <div class="row" style="gap:12px"><div class="cal-logo" style="background:${c.c}">${c.l||'<svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><rect x="3" y="5" width="18" height="16" rx="3"/><rect x="3" y="5" width="18" height="5" fill="#b3262b"/></svg>'}</div>
+    <div><div class="t1">${c.n}</div><div class="t2">${c.d}</div></div></div>
+    ${connected.has(c.id)?`<span class="pill p-good">✓ Connected</span>`:`<button class="chip on" data-cal="${c.id}">Connect</button>`}</div>`).join("");
+  const ok=connected.size>0; $("#planBtn").disabled=!ok; $("#planBtn").style.opacity=ok?1:.4;
+  $("#planHint").textContent=ok?`${connected.size} of 4 calendars connected`:"Connect at least one calendar to start";
+}
+renderCals();
+$("#calList").addEventListener("click",e=>{const b=e.target.closest("[data-cal]");if(!b)return;
+  b.textContent="Connecting…"; setTimeout(()=>{connected.add(b.dataset.cal);renderCals();toast(CALS.find(c=>c.id===b.dataset.cal).n+" connected");},700);});
+$("#planBtn").onclick=()=>{ if(!connected.size)return; planned=true; replanned=false;
+  $("#loadMsg").textContent="Reading your calendar… booking rides…"; show("loading"); setTimeout(()=>{show("plan",{push:false});},1600); };
+$("#planSettings").onclick=()=>{planned=false; onPlanShown();};
+$("#daySeg").addEventListener("click",e=>{const b=e.target.closest("[data-day]");if(!b)return;day=b.dataset.day;
+  document.querySelectorAll("#daySeg button").forEach(x=>x.classList.toggle("on",x===b));renderDay();});
+$("#undoReplan").onclick=()=>{replanned=false;$("#replan").classList.remove("on");renderDay();toast("Switched back to the TC bus. We’ll warn you if it fills up.");};
+
+function onPlanShown(){
+  $("#planConnect").style.display=planned?"none":""; $("#planDay").style.display=planned?"":"none";
+  if(!planned) return;
+  const names=[...connected].map(id=>CALS.find(c=>c.id===id).n.split(" ·")[0]);
+  $("#calConnectedTxt").textContent="Synced: "+names.join(", ");
+  renderDay();
+  if(!replanned){ setTimeout(()=>{ if(cur==="plan"&&day==="thu"&&!replanned){replanned=true;$("#replan").classList.add("on");renderDay();updateHome();} },2500); }
+  updateHome();
+}
+function updateHome(){
+  $("#homeNext").innerHTML=planned?`<b>Next: ECON 2005 · 10:00</b> — ${replanned?"carpool booked, leave 9:30":"TC bus, leave 9:31"}`:`<b>Connect your calendar</b> — we’ll plan every ride for you`;
+}
+// events: src must be a connected calendar to appear (Canvas & Google are the demo defaults if connected)
+function legHTML(l){return `<div class="leg"><button class="box" data-leg='${JSON.stringify(l).replace(/'/g,"&#39;")}'>
+  <div class="row sb"><div class="row"><div class="mi">${I[l.mode]}</div><div><div style="font-size:13.5px;font-weight:600">${l.title}</div><div class="t2">${l.sub}</div></div></div>
+  <span class="pill ${l.cls}">${l.status}</span></div></button></div>`;}
+function evHTML(e){const s=SRC[e.src];return `<div class="event" style="border-left-color:${s[1]}">
+  <div class="row sb"><div><div class="t1">${e.t} · ${e.title}</div><div class="t2">${e.where}</div></div><span class="src" style="background:${s[1]}22;color:${s[1]}">${s[0]}</span></div>
+  ${e.note?`<div class="t2" style="margin-top:6px">${e.note}</div>`:""}</div>`;}
+function pickSrc(pref){ if(connected.has(pref))return pref; return [...connected][0]; }
+function renderDay(){
+  $("#replan").classList.toggle("on",day==="thu"&&replanned);
+  let items=[];
+  if(day==="thu"){
+    items=[
+      replanned?{leg:{mode:"pool",title:"Carpool with Maya R.",sub:"Leave 9:30 · Toms Creek Rd → Pamplin 9:47",status:"Seat booked",cls:"p-good",alt:"bus"}}
+               :{leg:{mode:"bus",title:"Bus TC · leave 9:31",sub:"Arrives 9:37 · at Pamplin 9:53 · capacity 82%",status:"Alert set",cls:"p-blue",alt:"pool"}},
+      {ev:{t:"10:00 AM",title:"ECON 2005",where:"Pamplin 2030",src:pickSrc("c")}},
+      {leg:{mode:"walk",title:"Walk 6 min",sub:"Leave 12:05 · Pamplin → Turner Place",status:"Alert set",cls:"p-blue"}},
+      {ev:{t:"12:15 PM",title:"Lunch with Priya",where:"Turner Place",src:pickSrc("g")}},
+      {leg:{mode:"bike",title:"E-bike #214 held",sub:"Turner hotspot · leave 1:15 · 4 min ride",status:"Bike reserved",cls:"p-good"}},
+      {ev:{t:"1:25 PM",title:"ENGL 1106",where:"Shanks 180",src:pickSrc("c")}},
+      {leg:{mode:"walk",title:"Walk 8 min",sub:"Leave 3:12 · Shanks → Burruss",status:"Alert set",cls:"p-blue"}},
+      {ev:{t:"3:30 PM",title:"Advising appointment",where:"Burruss Hall 110",src:pickSrc("o")}},
+      {leg:{mode:"bus",title:"Stay on campus → bus later",sub:"Hokie Travel noticed a 3-hr gap: Newman Library is 4 min away",status:"Tip",cls:"p-blue"}},
+      {ev:{t:"6:30 PM",title:"Outdoor Club meeting",where:"Squires 345",src:pickSrc("a"),note:"🎉 You would have skipped this one without a ride home. It’s planned now."}},
+      {leg:{mode:"pool",title:"Ride home with the Library late-study group",sub:"Leaves Squires 8:05 · drops you at Toms Creek Rd 8:17",status:"Seat booked",cls:"p-good",alt:"bus"}}
+    ];
+  } else if(day==="fri"){
+    items=[
+      {leg:{mode:"pool",title:"Recurring carpool · Toms Creek → Drillfield",sub:"Driver: Jordan K. · pickup 9:30",status:"Auto-booked",cls:"p-good",alt:"bus"}},
+      {ev:{t:"10:00 AM",title:"ECON 2005",where:"Pamplin 2030",src:pickSrc("c")}},
+      {leg:{mode:"bike",title:"E-bike from Pamplin hotspot",sub:"Leave 11:20 · 5 min ride",status:"Bike reserved",cls:"p-good"}},
+      {ev:{t:"11:30 AM",title:"CS 1114 Lab",where:"McBryde 116",src:pickSrc("c")}},
+      {leg:{mode:"bus",title:"Bus UMS home",sub:"1:12 PM · capacity 40%",status:"Alert set",cls:"p-blue",alt:"pool"}}
+    ];
+  } else {
+    items=[
+      {leg:{mode:"car",title:"Rental car · Toyota Prius",sub:"Pick up Squires Lot 8:00 AM · return 5:00 PM · $59",status:"Car booked",cls:"p-good"}},
+      {ev:{t:"9:00 AM",title:"Cascades hike with friends",where:"Cascades Trail, Pembroke",src:pickSrc("g"),note:"Buses don’t go here. Split 4 ways with friends, it’s about $15 each."}},
+      {leg:{mode:"pool",title:"Friends added to the ride",sub:"Priya, Maya, Jordan · pickup at Squires 8:10",status:"Invites sent",cls:"p-good"}}
+    ];
+  }
+  $("#dayList").innerHTML=items.map(x=>x.ev?evHTML(x.ev):legHTML(x.leg)).join("")+
+    `<div class="t2" style="text-align:center;margin-top:14px">New events are planned automatically as soon as they hit your calendar.</div>`;
+}
+$("#dayList").addEventListener("click",e=>{const b=e.target.closest("[data-leg]");if(!b)return;const l=JSON.parse(b.dataset.leg);
+  $("#legTitle").textContent=l.title; $("#legSub").textContent=l.sub;
+  const alts=[
+    {m:"bus",t:"Bus TC · 9:37",s:"At Pamplin 9:53 · capacity 82%"},
+    {m:"pool",t:"Carpool · Maya R.",s:"Leaves 9:30 · at Pamplin 9:47 · $2"},
+    {m:"bike",t:"E-bike · Toms Creek hotspot",s:"14 min · $1"},
+    {m:"walk",t:"Walk",s:"22 min · leave 9:28"}
+  ].filter(a=>a.m!==l.mode);
+  $("#legOpts").innerHTML=`<div class="sec">Other options</div>`+alts.map(a=>`<button class="card tap" data-toast="Switched. Your plan and bookings are updated."><div class="row"><div class="ic">${I[a.m]}</div><div><div class="t1">${a.t}</div><div class="t2">${a.s}</div></div></div></button>`).join("");
+  $("#m-leg").classList.add("on");});
+$("#legOpts").addEventListener("click",()=>$("#m-leg").classList.remove("on"));
+
+/* ======================================================================
+   LIVE BUS DIRECTIONS
+   Real data from Google: Routes API (transit routes + alternatives, which
+   Google builds from Blacksburg Transit's own schedule/real-time feed) and
+   the Maps JavaScript API (map, route lines, BT transit layer).
+   Key: set at build time (GMAPS_KEY env var or src/gmaps-key.txt) or pasted
+   in the app with the 🔑 button (saved in this browser only).
+   ====================================================================== */
+const BUILD_KEY="{{GMAPS_KEY}}";
+const BBURG={lat:37.2296,lng:-80.4139};
+function getKey(){ if(BUILD_KEY) return BUILD_KEY; try{return localStorage.getItem("ht_gmaps_key")||"";}catch(e){return "";} }
+function setKey(k){ try{localStorage.setItem("ht_gmaps_key",k);}catch(e){} }
+
+let mapsPromise=null, mapsError="";
+function loadMaps(){
+  if(mapsPromise) return mapsPromise;
+  const key=getKey(); if(!key) return Promise.reject(new Error("nokey"));
+  mapsPromise=new Promise((res,rej)=>{
+    const t=setTimeout(()=>rej(new Error("Google Maps didn’t load. This page may be blocking it (the published preview does); open the HTML file in a browser instead.")),10000);
+    window.__htMapsReady=()=>{clearTimeout(t);res(window.google.maps);};
+    window.gm_authFailure=()=>{mapsError="Google rejected the API key. Check that Maps JavaScript API is enabled for it.";showMapMsg(mapsError);};
+    const s=document.createElement("script");
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&libraries=geometry&loading=async&callback=__htMapsReady`;
+    s.async=true; s.onerror=()=>{clearTimeout(t);rej(new Error("Couldn’t reach Google Maps. Check your internet connection, or open the HTML file directly instead of the published preview."));};
+    document.head.appendChild(s);
+  });
+  mapsPromise.catch(e=>{mapsError=e.message;});
+  return mapsPromise;
+}
+
+/* home map: live Google map with BT routes, screenshot as fallback */
+let homeMap=null;
+function initHomeMap(){
+  if(homeMap||!getKey()) return;
+  loadMaps().then(gm=>{
+    if(homeMap) return;
+    homeMap=new gm.Map($("#homeMap"),{center:BBURG,zoom:14,disableDefaultUI:true,gestureHandling:"greedy",clickableIcons:false});
+    new gm.TransitLayer().setMap(homeMap);
+    $("#homeMapWrap").classList.add("live");
+  }).catch(()=>{});
+}
+
+/* ---- transit screen ---- */
+let tMap=null, tOverlays=[], tRoutes=[], tSel=0, tOpen=-1, tPref="", myLatLng=null, tBusy=false;
+const WALK_IC=`<svg viewBox="0 0 24 24" style="fill:var(--walk-ic)"><circle cx="13" cy="4" r="2"/><path d="M10 22l2-7 2 2v5h2v-6l-2-2 1-4c1 1 3 2 5 2v-2c-2 0-3-1-4-2l-1-1.5c-.5-.5-1-.5-1.5-.5L8 8v4h2V9.5l2-.5-3 13z"/></svg>`;
+const BUS_IC=c=>`<svg viewBox="0 0 24 24" fill="${c}"><rect x="5" y="3" width="14" height="15" rx="3"/><rect x="7" y="6" width="10" height="5" fill="#0006"/><rect x="6" y="18" width="3" height="3"/><rect x="15" y="18" width="3" height="3"/></svg>`;
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const secs=d=>parseInt(d||"0",10)||0;
+const fmtT=d=>d.toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+const fmtMin=s=>{const m=Math.max(1,Math.round(s/60));return m<60?`${m} min`:`${Math.floor(m/60)} hr ${m%60?m%60+" min":""}`.trim();};
+const fmtDist=m=>m<160?`${Math.round(m*3.281)} ft`:`${(m/1609.34).toFixed(1)} mi`;
+
+function showMapMsg(t){ const m=$("#tMapMsg"); m.style.display=t?"grid":"none"; m.innerHTML=t||""; }
+function keyCardHTML(msg){
+  return `<div class="card keycard"><div class="t1">Connect Google Maps</div>
+    <div class="t2" style="line-height:1.5;margin-top:4px">${msg||"Paste a Google Maps API key with <b>Maps JavaScript API</b> and <b>Routes API</b> enabled. It’s saved in this browser only."}</div>
+    <input id="keyIn" placeholder="AIza…" autocomplete="off" spellcheck="false" value="${esc(getKey())}">
+    <button class="btn pri" id="keySave">Save key</button></div>`;
+}
+function onTransitShown(){
+  if(!getKey()){ $("#tList").innerHTML=keyCardHTML(); showMapMsg("Live map appears once a Google Maps key is added"); return; }
+  if(!tRoutes.length&&!tBusy) renderSuggestions();
+  loadMaps().then(gm=>{
+    if(!tMap){ tMap=new gm.Map($("#transitMap"),{center:BBURG,zoom:14,disableDefaultUI:true,zoomControl:true,gestureHandling:"greedy",clickableIcons:false});
+      new gm.TransitLayer().setMap(tMap); }
+    if(!tRoutes.length) showMapMsg(""); else drawRoute();
+  }).catch(e=>showMapMsg(esc(e.message==="nokey"?"":e.message)));
+}
+function renderSuggestions(){
+  $("#tList").innerHTML=`<div class="sec">Popular on campus</div>`+PLACES.map(([n,s])=>`<button class="sugg" data-tplace="${esc(n)}">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="#ff8a4c"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z"/></svg>
+    <div><div style="font-size:14.5px;font-weight:500">${esc(n)}</div><div class="t2">${esc(s)}</div></div></button>`).join("")+
+    `<div class="src-note">Routes and times come live from Google Maps, which uses Blacksburg Transit’s schedule and real-time data.</div>`;
+}
+$("#tList").addEventListener("click",e=>{
+  if(e.target.closest("#keySave")){ const k=$("#keyIn").value.trim(); if(!k) return;
+    const had=!!mapsPromise; setKey(k); if(had){ toast("Key saved. Reloading…"); setTimeout(()=>location.reload(),700); return; }
+    toast("Key saved"); onTransitShown(); initHomeMap(); return; }
+  const p=e.target.closest("[data-tplace]"); if(p){ $("#tTo").value=p.dataset.tplace; searchTransit(); return; }
+  if(e.target.closest("[data-compare]")){ $("#to").value=$("#tTo").value; buildResults(); show("results"); return; }
+  const d=e.target.closest("[data-details]"); if(d){ e.stopPropagation(); const i=+d.dataset.details; tOpen=tOpen===i?-1:i; tSel=i; renderOptions(); drawRoute(); return; }
+  const o=e.target.closest("[data-opt]"); if(o){ tSel=+o.dataset.opt; renderOptions(); drawRoute(); }
+});
+$("#keyBtn").onclick=()=>{ if(BUILD_KEY){toast("This build has a key built in (see build.py).");return;} $("#tList").innerHTML=keyCardHTML(); };
+$("#tSwap").onclick=()=>{ const a=$("#tFrom").value; $("#tFrom").value=$("#tTo").value; $("#tTo").value=a; myLatLng=null; if($("#tFrom").value&&$("#tTo").value) searchTransit(); };
+$("#tWhen").onchange=()=>{ const v=$("#tWhen").value, ti=$("#tTime"); ti.style.display=v==="now"?"none":"";
+  if(v!=="now"&&!ti.value){ const d=new Date(Date.now()+30*60000); ti.value=`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`; } };
+$("#tGo").onclick=()=>searchTransit();
+["#tFrom","#tTo"].forEach(s=>$(s).addEventListener("keydown",e=>{ if(e.key==="Enter") searchTransit(); }));
+$("#tFrom").addEventListener("input",()=>{myLatLng=null;});
+$("#tPref").addEventListener("click",e=>{const c=e.target.closest("[data-pref]");if(!c)return;tPref=c.dataset.pref;
+  document.querySelectorAll("#tPref .chip").forEach(x=>x.classList.toggle("on",x===c)); if($("#tTo").value.trim()) searchTransit();});
+$("#myLoc").onclick=()=>{
+  if(!navigator.geolocation){toast("Location isn’t available in this browser.");return;}
+  $("#tFrom").value="Finding you…";
+  navigator.geolocation.getCurrentPosition(p=>{myLatLng={latitude:p.coords.latitude,longitude:p.coords.longitude};$("#tFrom").value="Your location";},
+    ()=>{$("#tFrom").value="";toast("Couldn’t get your location. Type a starting point instead.");},{timeout:8000});
+};
+
+function waypoint(text,isFrom){
+  if(isFrom&&myLatLng) return {location:{latLng:myLatLng}};
+  const t=text.trim(); return {address:/,|\d{5}/.test(t)?t:`${t}, Blacksburg, VA`};
+}
+function whenDate(){
+  const [h,m]=($("#tTime").value||"").split(":").map(Number); if(isNaN(h)) return null;
+  const d=new Date(); d.setHours(h,m,0,0); if(d<new Date()) d.setDate(d.getDate()+1); return d;
+}
+async function searchTransit(){
+  const key=getKey(); if(!key){ $("#tList").innerHTML=keyCardHTML(); return; }
+  const from=$("#tFrom").value.trim(), to=$("#tTo").value.trim();
+  if(!from||!to){ toast("Enter both a starting point and a destination."); return; }
+  tBusy=true; tRoutes=[]; tSel=0; tOpen=-1; clearOverlays();
+  $("#tList").innerHTML=`<div style="display:grid;place-items:center;padding:30px 0"><svg class="spinner" viewBox="0 0 44 44" style="margin:0">${$("#spin").innerHTML}</svg><div class="t2" style="margin-top:10px">Checking live bus times…</div></div>`;
+  const body={origin:waypoint(from,true),destination:waypoint(to,false),travelMode:"TRANSIT",computeAlternativeRoutes:true,
+    transitPreferences:{allowedTravelModes:["BUS"]},languageCode:"en-US",units:"IMPERIAL"};
+  if(tPref) body.transitPreferences.routingPreference=tPref;
+  const w=$("#tWhen").value, wd=w==="now"?null:whenDate();
+  if(wd) body[w==="arr"?"arrivalTime":"departureTime"]=wd.toISOString();
+  try{
+    const r=await fetch("https://routes.googleapis.com/directions/v2:computeRoutes",{method:"POST",
+      headers:{"Content-Type":"application/json","X-Goog-Api-Key":key,
+        "X-Goog-FieldMask":"routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.localizedValues,routes.legs.steps,routes.viewport"},
+      body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok) throw new Error(j.error?.message||`Google returned an error (${r.status}).`);
+    tRoutes=(j.routes||[]).map(parseRoute);
+    tBusy=false;
+    if(!tRoutes.length){ $("#tList").innerHTML=`<div class="card"><div class="t1">No bus routes found</div><div class="t2" style="margin-top:4px;line-height:1.5">Google has no bus trip for this time. Buses may not be running, or try a more specific place name.</div></div>`+compareBtn(); showMapMsg(tMap?"":"No route to show"); return; }
+    renderOptions(); drawRoute();
+  }catch(e){
+    tBusy=false;
+    const m=String(e.message||e), keyIssue=/API key|not been used|disabled|PERMISSION|referer|blocked/i.test(m);
+    $("#tList").innerHTML=keyIssue?keyCardHTML(`Google said: <i>${esc(m)}</i><br>Make sure <b>Routes API</b> is enabled for this key.`)
+      :`<div class="card"><div class="t1">Couldn’t get live routes</div><div class="t2" style="margin-top:4px;line-height:1.5">${esc(m==="Failed to fetch"?"Couldn’t reach Google. Check your connection, or open the HTML file directly (the published preview blocks outside requests).":m)}</div></div>`;
+  }
+}
+function parseRoute(rt){
+  const segs=[];
+  for(const st of (rt.legs?.[0]?.steps||[])){
+    const sec=secs(st.staticDuration), dist=st.distanceMeters||0, poly=st.polyline?.encodedPolyline;
+    if(st.travelMode==="TRANSIT"&&st.transitDetails){ segs.push({type:"bus",td:st.transitDetails,sec,poly}); }
+    else{ const last=segs[segs.length-1];
+      if(last&&last.type==="walk"){ last.sec+=sec; last.dist+=dist; if(poly) last.polys.push(poly); }
+      else segs.push({type:"walk",sec,dist,polys:poly?[poly]:[]}); }
+  }
+  const buses=segs.filter(s=>s.type==="bus"), total=secs(rt.duration);
+  let start,end;
+  if(buses.length){
+    const iF=segs.indexOf(buses[0]), iL=segs.indexOf(buses[buses.length-1]);
+    const pre=segs.slice(0,iF).reduce((a,s)=>a+s.sec,0), post=segs.slice(iL+1).reduce((a,s)=>a+s.sec,0);
+    start=new Date(new Date(buses[0].td.stopDetails.departureTime).getTime()-pre*1000);
+    end=new Date(new Date(buses[buses.length-1].td.stopDetails.arrivalTime).getTime()+post*1000);
+  }else{
+    const w=$("#tWhen").value, wd=w==="now"?new Date():whenDate()||new Date();
+    if(w==="arr"){ end=wd; start=new Date(wd-total*1000);} else { start=wd; end=new Date(+wd+total*1000);} }
+  const walkSec=segs.filter(s=>s.type==="walk").reduce((a,s)=>a+s.sec,0);
+  return {segs,buses,start,end,walkSec,fare:rt.localizedValues?.transitFare?.text||"",poly:rt.polyline?.encodedPolyline,viewport:rt.viewport};
+}
+function lineChip(td){
+  const l=td.transitLine||{}, bg=l.color||"#7b1c1c", fg=l.textColor||"#fff";
+  return `<span class="bchip" style="background:${esc(bg)};color:${esc(fg)}">${BUS_IC(esc(fg))}${esc(l.nameShort||l.name||"Bus")}</span>`;
+}
+function compareBtn(){ return `<button class="btn sec2" data-compare>Compare with carpool, bike &amp; parking ›</button>`; }
+function renderOptions(){
+  const to=$("#tTo").value.trim();
+  $("#tList").innerHTML=`<div class="t2" style="margin-top:12px">${tRoutes.length} bus option${tRoutes.length>1?"s":""} · live from Google Maps</div>`+
+  tRoutes.map((r,i)=>{
+    const firstBus=r.buses[0];
+    const chips=r.segs.map(s=>s.type==="bus"?lineChip(s.td):(s.sec>=60||r.segs.length===1?`<span style="display:inline-flex;align-items:center">${WALK_IC}<small style="margin-left:1px">${Math.round(s.sec/60)||""}</small></span>`:"")).filter(Boolean).join(`<span>›</span>`);
+    const dep=firstBus?`${esc(firstBus.td.localizedValues?.departureTime?.time?.text||fmtT(new Date(firstBus.td.stopDetails.departureTime)))} from ${esc(firstBus.td.stopDetails?.departureStop?.name||"stop")}`:"Walking only · no bus needed";
+    return `<div class="opt${i===tSel?" sel":""}" data-opt="${i}" role="button" tabindex="0">
+      <div class="row sb"><div class="tm">${fmtT(r.start)} – ${fmtT(r.end)}</div><div class="t1">${fmtMin((r.end-r.start)/1000)}</div></div>
+      <div class="segs">${chips}</div>
+      <div class="row sb" style="margin-top:8px"><div class="t2">${dep}</div>${i===0?`<span class="pill p-best">Best</span>`:""}</div>
+      <div class="row sb" style="margin-top:6px"><div class="t2">${r.fare?esc(r.fare)+" · ":""}${fmtMin(r.walkSec)} walking${r.buses.length>1?` · ${r.buses.length-1} transfer${r.buses.length>2?"s":""}`:""}</div>
+        <button class="chip" data-details="${i}">${tOpen===i?"Hide steps":"Steps"}</button></div>
+      ${tOpen===i?stepsHTML(r,to):""}
+    </div>`;}).join("")+compareBtn()+
+  `<div class="src-note">Times from Google Maps, updated with Blacksburg Transit real-time data where BT provides it.</div>`;
+}
+function stepsHTML(r,to){
+  return `<div class="steps">`+r.segs.map((s,k)=>{
+    if(s.type==="walk"){ const next=r.segs[k+1]; const dest=next?next.td.stopDetails?.departureStop?.name:to;
+      return `<div class="stp"><span class="bar" style="background:repeating-linear-gradient(#4c8dff 0 4px,transparent 4px 8px)"></span><div>${WALK_IC.replace('<svg','<svg style="width:15px;height:15px;vertical-align:-3px"')} Walk to ${esc(dest||"destination")}<small>${fmtMin(s.sec)} · ${fmtDist(s.dist)}</small></div></div>`; }
+    const td=s.td, sd=td.stopDetails||{}, l=td.transitLine||{}, lv=td.localizedValues||{};
+    const dT=lv.departureTime?.time?.text||fmtT(new Date(sd.departureTime)), aT=lv.arrivalTime?.time?.text||fmtT(new Date(sd.arrivalTime));
+    return `<div class="stp"><span class="bar" style="background:${esc(l.color||"#7b1c1c")}"></span><div>
+      <b>${dT}</b> · ${esc(sd.departureStop?.name||"")}<small>${lineChip(td)} ${esc(l.name||"")} toward ${esc(td.headsign||"")}</small>
+      <small>Ride ${td.stopCount||"?"} stop${td.stopCount===1?"":"s"} (${fmtMin(s.sec)})</small>
+      <b>${aT}</b> · ${esc(sd.arrivalStop?.name||"")}</div></div>`;
+  }).join("")+`</div>`;
+}
+function clearOverlays(){ tOverlays.forEach(o=>o.setMap(null)); tOverlays=[]; }
+function drawRoute(){
+  if(!tMap||!window.google?.maps?.geometry) return;
+  const gm=google.maps, dec=p=>p?gm.geometry.encoding.decodePath(p):[];
+  clearOverlays(); showMapMsg("");
+  const bounds=new gm.LatLngBounds();
+  tRoutes.forEach((r,i)=>{ if(i!==tSel&&r.poly) tOverlays.push(new gm.Polyline({map:tMap,path:dec(r.poly),strokeColor:"#9aa0a6",strokeOpacity:.8,strokeWeight:4,zIndex:1})); });
+  const r=tRoutes[tSel]; if(!r) return;
+  const dot=(pos,fill,scale=6,stroke="#fff")=>tOverlays.push(new gm.Marker({map:tMap,position:pos,zIndex:5,clickable:false,
+    icon:{path:gm.SymbolPath.CIRCLE,scale,fillColor:fill,fillOpacity:1,strokeColor:stroke,strokeWeight:2}}));
+  let first=null,last=null;
+  r.segs.forEach(s=>{
+    const paths=s.type==="walk"?s.polys.map(dec):[dec(s.poly)];
+    paths.forEach(path=>{ if(!path.length) return; path.forEach(p=>bounds.extend(p)); first=first||path[0]; last=path[path.length-1];
+      if(s.type==="walk") tOverlays.push(new gm.Polyline({map:tMap,path,strokeOpacity:0,zIndex:3,
+        icons:[{icon:{path:gm.SymbolPath.CIRCLE,scale:2.5,fillColor:"#4c8dff",fillOpacity:1,strokeOpacity:0},offset:"0",repeat:"9px"}]}));
+      else{ tOverlays.push(new gm.Polyline({map:tMap,path,strokeColor:s.td.transitLine?.color||"#7b1c1c",strokeWeight:6,strokeOpacity:1,zIndex:4}));
+        dot(path[0],"#fff",5,"#333"); dot(path[path.length-1],"#fff",5,"#333"); }
+    });
+  });
+  if(first) dot(first,"#34c759",7); if(last) dot(last,"#ff3b30",7);
+  if(!bounds.isEmpty()) tMap.fitBounds(bounds,24);
+}
+</script>
+</body>
+</html>

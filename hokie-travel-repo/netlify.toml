@@ -1,0 +1,4 @@
+# Netlify: publish the ready-built site/ folder (no build step needed).
+# Rebuild it locally with `python3 build.py`, commit, push -> Netlify redeploys automatically.
+[build]
+  publish = "site"
